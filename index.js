@@ -1,45 +1,33 @@
-const http = require('http');
-const fs = require('fs');
-const path = require('path');
+import express from 'express';
+import http from 'http';
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+const app = express();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
-const PORT = 8080;
+const PORT = process.env.PORT || 8080;
 
-const server = http.createServer((req, res) => {
-    // Determine which file to look for based on the request URL
-    let filename = '';
-    console.log(`visitor viewed ${req.url}`);
-    console.log(req);
-    if (req.url === '/' || req.url === '/index.html') {
-        filename = 'index.html';
-    } else if (req.url === '/about.html') {
-        filename = 'about.html';
-    } else if (req.url === '/contact-me.html') {
-        filename = 'contact-me.html';
-    } else {
-        filename = '404.html';
-    }
-
-    // Resolve the absolute file path
-    const filePath = path.join(__dirname, filename);
-
-    // Read the file and serve it
-    fs.readFile(filePath, (err, content) => {
-        if (err) {
-            // Internal server error fallback if something is missing
-            res.writeHead(500, { 'Content-Type': 'text/plain' });
-            res.end('500 Internal Server Error');
-            return;
-        }
-
-        // Set the appropriate status code (404 for the error page, 200 for successful routes)
-        const statusCode = filename === '404.html' ? 404 : 200;
-        
-        res.writeHead(statusCode, { 'Content-Type': 'text/html' });
-        res.end(content, 'utf-8');
-    });
+app.get('/', (req, res) => {
+    // serveFile(req, res, 'index.html');
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-server.listen(PORT, () => {
+app.get('/about.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'about.html'));
+});
+
+app.get('/contact-me.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'contact-me.html'));
+});
+
+app.use((req, res, next) => {
+  res.status(404).send("Sorry can't find that!");
+});
+
+app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}/`);
 });
 
